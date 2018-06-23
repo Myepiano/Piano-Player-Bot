@@ -25,6 +25,7 @@ function createTemp(message, ary, connection, bpmTempo) {
         var name = sorted[x];
 
         sorted[x] = sorted[x].toLowerCase();
+        //Different input options
         if (sorted[x].includes('.whole') || sorted[x].includes('.w') || sorted[x].includes('.wholenote')) {
             noteLength = tempo * 4;
             name = sorted[x].substr(0, sorted[x].indexOf('.'));
