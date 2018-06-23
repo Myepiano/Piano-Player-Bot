@@ -192,7 +192,6 @@ client.on('message', message => {
                     ready = 0;
                     channel.join()
                         .then(connection => {
-                            //play(message, connection, msgAry, 1, 1000);
                             createTemp(message, msgAry, connection, tempo);
                             message.channel.send("Loading piece...");
                         })
@@ -221,21 +220,3 @@ client.on('message', message => {
 });
 
 client.login(auth.token);
-
-function play(message, connection, ary, x, tempo) {
-    
-
-    var temp = connection.playFile('./audio/Piano.ff.' + ary[x] + '.aiff', {
-        passes: 5
-    });
-
-    setTimeout(function() {
-        if (x < ary.length) {
-            play(message, connection, ary, x + 1, tempo);
-        } else {
-            temp.destroy();
-            const channel = message.member.voiceChannel;
-            channel.leave();
-        }
-    }, 1000);
-}
