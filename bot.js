@@ -81,7 +81,7 @@ function createTemp(message, ary, connection, bpmTempo) {
                         combineFiles(message, ary, connection);
                     }
                 })
-                .output('./temp/Piano.ff.changed.' + sorted[x] + '.aiff')
+                .output('./temp/Piano.ff.changed.' + sorted[x] + '.' + message.member.guild.id + '.aiff')
                 .run();
         } else {
 
@@ -109,19 +109,20 @@ function combineFiles(message, ary, connection) {
 
     //add all files to merged
     ary.forEach(function(audioFile) {
-        if (fs.existsSync('./temp/Piano.ff.changed.' + audioFile + '.aiff')) {
-            merged = merged.addInput('./temp/Piano.ff.changed.' + audioFile + '.aiff');
+        if (fs.existsSync('./temp/Piano.ff.changed.' + audioFile + '.' + message.member.guild.id + '.aiff')) {
+            merged = merged.addInput('./temp/Piano.ff.changed.' + audioFile + '.' + message.member.guild.id + '.aiff');
         }
     });
 
     //merged all the files to a main temp file
-    merged.mergeToFile('./temp/Piano.ff.changed.main.aiff', './temp/')
+    merged.mergeToFile('./temp/Piano.ff.changed.main.' + message.member.guild.id + '.aiff', './temp/')
         .on('error', function(err) {
             console.log(err.message);
         })
         .on('end', function() {
             console.log('Finished!');
             //Play the main temp file
+            message.channel.send("Would you like to: \n (1) Download the music file \n (2) Have the music bot join your voice channel and play the music file. \n \n The music file will be available for 1 minute, or until another music file is created in this server.")
             playAll(message, ary, connection);
         });
 }
@@ -130,14 +131,13 @@ function playAll(message, ary, connection) {
     //Play file on discord
     message.channel.send("Playing piece!");
     
-    if (fs.existsSync('./temp/Piano.ff.changed.main.aiff')) {
+    if (fs.existsSync('./temp/Piano.ff.changed.main.' + message.member.guild.id + '.aiff')) {
         //message.channel.sendFile('./temp/Piano.ff.changed.main.aiff', 'music.aiff');
-        var dispatcher = connection.playFile('./temp/Piano.ff.changed.main.aiff');
+        var dispatcher = connection.playFile('./temp/Piano.ff.changed.main.' + message.member.guild.id + '.aiff');
     } else {
         const channel = message.member.voiceChannel;
         channel.leave();
         ready = 1;
-        console.log("yes");
     }
 
     //Leave the voice channel while deleting temp files created
@@ -192,7 +192,10 @@ client.on('message', message => {
                     ready = 0;
                     channel.join()
                         .then(connection => {
+                            //play(message, connection, msgAry, 1, 1000);
+                            console.log(message.member.guild.id);
                             createTemp(message, msgAry, connection, tempo);
+                        
                             message.channel.send("Loading piece...");
                         })
                         .catch(console.error);
@@ -220,3 +223,21 @@ client.on('message', message => {
 });
 
 client.login(auth.token);
+
+function play(message, connection, ary, x, tempo) {
+    
+
+    var temp = connection.playFile('./audio/Piano.ff.' + ary[x] + '.aiff', {
+        passes: 5
+    });
+
+    setTimeout(function() {
+        if (x < ary.length) {
+            play(message, connection, ary, x + 1, tempo);
+        } else {
+            temp.destroy();
+            const channel = message.member.voiceChannel;
+            channel.leave();
+        }
+    }, 1000);
+}
